@@ -1,0 +1,197 @@
+# START http://boxstarter.org/package/url?*url to raw gist*
+# Run in Powershell or CMD Administrator
+
+try {
+
+# Boxstarter options
+$Boxstarter.RebootOk=$true
+$Boxstarter.NoPassword=$false
+$Boxstarter.AutoLogin=$true
+
+# Basic setup
+Update-ExecutionPolicy Unrestricted
+Set-WindowsExplorerOptions -EnableShowHiddenFilesFoldersDrives -EnableShowFileExtensions -EnableShowFullPathInTitleBar
+Enable-RemoteDesktop
+Disable-InternetExplorerESC
+Disable-UAC
+
+# Setup time right
+net stop w32time
+w32tm /unregister
+w32tm /unregister
+w32tm /register
+reg add HKLM\SYSTEM\CurrentControlSet\Services\W32Time\Parameters\ /v NtpServer /t reg_sz /d time.nist.gov /f
+net start w32time
+w32tm /resync /rediscover
+
+# Setup power settings
+Write-BoxstarterMessage "Setting Windows power plan to High performance: "
+$guid = (Get-WmiObject -Class win32_powerplan -Namespace root\cimv2\power -Filter "ElementName='High performance'").InstanceID.tostring()
+$regex = [regex]"{(.*?)}$"
+$newpowerVal = $regex.Match($guid).groups[1].value
+powercfg -S $newpowerVal
+
+Write-BoxstarterMessage "Setting Standby Timeout to Never: "
+powercfg -change -standby-timeout-ac 0
+powercfg -change -standby-timeout-dc 10
+
+Write-BoxstarterMessage "Setting Monitor Timeout to Never: "
+powercfg -change -monitor-timeout-ac 3
+powercfg -change -monitor-timeout-dc 1
+
+Write-BoxstarterMessage "Setting Disk Timeout to Never: "
+powercfg -change -disk-timeout-ac 0
+powercfg -change -disk-timeout-dc 15
+
+Write-BoxstarterMessage "Turning off Windows Hibernation: "
+powercfg -h off
+
+Write-BoxstarterMessage "Install IIS: "
+# Install IIS
+choco install IIS-WebServerRole -source windowsfeatures
+choco install IIS-HttpCompressionDynamic -source windowsfeatures
+choco install NetFx4Extended-ASPNET45 -source windowsfeatures
+choco install IIS-ISAPIFilter -source windowsfeatures
+choco install IIS-ISAPIExtensions -source windowsfeatures
+choco install IIS-NetFxExtensibility45 -source windowsfeatures
+choco install IIS-ASPNET45 -source windowsfeatures
+
+Write-BoxstarterMessage "Install Apps (normal level): "
+
+# Normal Apps
+choco install 7zip -y
+choco install cmder -y
+choco install git -y
+choco install vim -y
+choco install notepadplusplus -y
+choco install googlechrome -y
+choco install flashplayerplugin -y
+choco install flashplayeractivex -y
+
+Write-BoxstarterMessage "Install Apps (dev level): "
+
+# Dev Apps
+choco install python -y
+choco install nodejs -y
+choco install jdk8 -y
+choco install jre8 -y
+choco install visualstudiocode -y
+choco install atom -y
+choco install golang -y
+choco install nunit.install -y
+choco install xunit -y
+choco install sqlite -y
+choco install maven -y
+choco install gradle -y
+choco install redis-64 -y
+choco install docker -y
+choco install rabbitmq -y
+choco install elasticsearch -y
+
+Write-BoxstarterMessage "Install Apps (tools level): "
+
+# Tools Apps
+choco install curl -y
+choco install wget -y
+choco install fiddler4 -y
+choco install putty -y
+choco install winscp -y
+choco install teamviewer -y
+choco install mremoteng -y
+choco install chromium -y
+choco install everything -y
+choco install gitextensions -y
+choco install beyondcompare -y
+choco install kdiff3 -y
+choco install winmerge -y
+choco install ilspy -y
+
+Write-BoxstarterMessage "Install Apps (utils level): "
+
+# Utils Apps
+choco install googledrive -y
+choco install dropbox -y
+choco install youtube-dl -y
+choco install spotify -y
+choco install netease-cloudmusic -y
+choco install skype -y
+choco install ccleaner -y
+choco install malwarebytes -y
+choco install keepass -y
+choco install licecap -y
+choco install greenshot -y
+choco install zoomit -y
+
+Write-BoxstarterMessage "All Apps Installed~"
+
+Write-BoxstarterMessage "Make Customize Folder: "
+
+# Make folder
+# C:\Roger
+if (!(Test-Path -Path C:\Roger )) {
+mkdir C:\Roger
+}
+
+# Make child folder: info project
+cd C:\Roger && mkdir info project gdrive systemsetting
+
+$DIR_HOME=C:\Roger
+$DIR_INFO=C:\Roger\info
+$DIR_PROJECT=C:\Roger\project
+$DIR_GD=C:\Roger\gdrive
+
+Write-BoxstarterMessage "Child Folders Ready: info project gdrive systemsetting~"
+Write-BoxstarterMessage "Folders Ready~"
+
+# Config ENV
+setx R $DIR_HOME
+setx PROJECT $DIR_PROJECT
+setx GD $DIR_GD
+setx GYP_MSVS_VERSION 2015
+
+
+# Install Packages
+npm i -g bower generator-aspnet gulp http-server karma-cli npm-check-updates typescript webpack webpack-dev-server surge yo tsd
+apm install advanced-new-file atom-beautify json-schema atom-save-all atom-typescript atom-yeoman bezier-curve-editor color-picker editorconfig emmet git-plus jshint json-schema keyboard-localization language-docker less-than-slash linter omnisharp-atom pigments react tool-bar tool-bar-main turbo-javascript
+
+# Config Git
+git config --global push.default current
+git config --global core.ignorecase false
+git config --global user.name "Roger Cui"
+git config --global user.email "jesuie@live.cn"
+
+
+# Add aliases to cmder
+Get-ChocolateyWebFile 'cmder_aliases' "C:\Program Files\cmder\config\aliases" 'https://raw.githubusercontent.com/itabas016/env/master/windows/aliases'
+
+# Get user info
+Write-BoxstarterMessage "about do choco list: "
+choco list -localonly >$DIR_INFO\chocolist.txt
+
+Write-BoxstarterMessage "about do whoami"
+whoami /all /fo csv >$DIR_INFO\info.csv
+Write-BoxstarterMessage "about do do getmac"
+getmac >>$DIR_INFO\info.csv
+Write-BoxstarterMessage "about do do ipconfig"
+ipconfig /all >>$DIR_INFO\info.csv
+Write-BoxstarterMessage "about do do wmic"
+wmic csproduct get vendor,name,identifyingnumber >>$DIR_INFO\info.csv
+
+Write-BoxstarterMessage "user info record into Roger->info .csv and .txt~"
+
+# Turn UAC Back on
+Enable-UAC
+
+# Clean up Boxstarter Autologin
+# Note: keep this last in the script
+
+$winLogonKey="HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"
+Remove-ItemProperty -Path $winLogonKey -Name "DefaultUserName" -ErrorAction SilentlyContinue
+Remove-ItemProperty -Path $winLogonKey -Name "DefaultDomainName" -ErrorAction SilentlyContinue
+Remove-ItemProperty -Path $winLogonKey -Name "DefaultPassword" -ErrorAction SilentlyContinue
+Remove-ItemProperty -Path $winLogonKey -Name "AutoAdminLogon" -ErrorAction SilentlyContinue
+
+} catch {
+  Write-ChocolateyFailure 'Install' $($_.Exception.Message)
+  throw
+}
