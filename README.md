@@ -1,14 +1,14 @@
-## Setup Dev Environment ##
+## Setup Dev Environment
 
 _Contains two parts, one is windows, the other is ubuntu_
 
 _In windows part using [BoxStarter](http://boxstarter.org/) scripts to build dev environment._
 
-### Usage ###
+### Usage
 
-> `git clone git@github.com:itabas016/env.git ~`
+> `git clone git@github.com:itabas016/boxstarter.git ~`
 
-#### Windows ####
+#### Windows
 
 **PS. ONLY test pass on windows 10**
 
@@ -16,13 +16,12 @@ _In windows part using [BoxStarter](http://boxstarter.org/) scripts to build dev
 
 > Then run script -> [Run Script](http://boxstarter.org/package/nr/url?https://raw.githubusercontent.com/itabas016/env/master/windows/run.txt)
 
-#### Ubuntu ####
+#### Ubuntu
 
 **PS. ONLY test pass on ubuntu(VM) >= 14.04**
 
 > `chmod +x ~/env/ubuntu/run.sh`
 
 > Run script -> [Run script](https://raw.githubusercontent.com/itabas016/env/master/ubuntu/run.sh)
-
 
 [MIT](https://github.com/itabas016/install/blob/master/LICENSE)
